@@ -135,6 +135,8 @@ pub enum DataKey {
     BurnCount(u32),
     TokenByAddress(Address),
     Paused,
+    StreamCount,
+    Stream(u32),
 }
 
 /// Contract error codes
@@ -186,4 +188,9 @@ pub enum Error {
     InvalidBaseFee = 17,
     InvalidMetadataFee = 18,
     InconsistentTokenCount = 19,
+    StreamNotFound = 20,
+    StreamAlreadyClaimed = 21,
+    StreamPaused = 22,
+    StreamNotPaused = 23,
+    StreamCancelled = 24,
 }

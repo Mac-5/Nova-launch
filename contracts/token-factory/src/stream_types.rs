@@ -11,6 +11,9 @@ pub struct StreamInfo {
     pub amount: i128,
     pub metadata: Option<String>,
     pub created_at: u64,
+    pub claimed: bool,
+    pub paused: bool,
+    pub cancelled: bool,
 }
 
 /// Validate stream metadata length (max 512 chars)

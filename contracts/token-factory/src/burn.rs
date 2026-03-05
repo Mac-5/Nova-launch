@@ -55,12 +55,11 @@ pub fn burn(env: &Env, caller: Address, token_index: u32, amount: i128) -> Resul
     // 7. Atomic state update — both writes happen before any external call
     storage::set_balance(env, token_index, &caller, new_balance);
     info.total_supply = new_supply;
+    info.total_burned = info.total_burned.checked_add(amount).ok_or(Error::ArithmeticError)?;
+    info.burn_count = info.burn_count.checked_add(1).ok_or(Error::ArithmeticError)?;
     storage::set_token_info(env, token_index, &info);
 
-    // 8. Increment burn counter for the token
-    storage::increment_burn_count(env, token_index);
-
-    // 9. Emit event — after state is fully committed
+    // 8. Emit event — after state is fully committed
     emit_burn_event(env, token_index, &caller, amount, new_supply);
 
     Ok(())
@@ -115,9 +114,9 @@ pub fn admin_burn(
     // 7. Atomic state update
     storage::set_balance(env, token_index, &holder, new_balance);
     info.total_supply = new_supply;
+    info.total_burned = info.total_burned.checked_add(amount).ok_or(Error::ArithmeticError)?;
+    info.burn_count = info.burn_count.checked_add(1).ok_or(Error::ArithmeticError)?;
     storage::set_token_info(env, token_index, &info);
-
-    storage::increment_burn_count(env, token_index);
 
     // 8. Emit event with both admin and holder for auditability
     emit_admin_burn_event(env, token_index, &admin, &holder, amount, new_supply);
@@ -196,8 +195,9 @@ pub fn batch_burn(
         .ok_or(Error::ArithmeticError)?;
 
     info.total_supply = new_supply;
+    info.total_burned = info.total_burned.checked_add(total_burn).ok_or(Error::ArithmeticError)?;
+    info.burn_count = info.burn_count.checked_add(burns.len()).ok_or(Error::ArithmeticError)?;
     storage::set_token_info(env, token_index, &info);
-    storage::increment_burn_count(env, token_index);
 
     emit_batch_burn_event(env, token_index, &admin, burns.len(), total_burn, new_supply);
 

@@ -162,6 +162,9 @@ impl TokenFactory {
         storage::set_token_info_by_address(&env, &token_address, &token_info);
         storage::increment_token_count(&env);
 
+        // Mint initial supply to creator
+        storage::set_balance(&env, token_count, &creator, initial_supply);
+
         // Emit event
         events::emit_token_created(
             &env,
@@ -822,6 +825,141 @@ impl TokenFactory {
         burn::get_burn_count(&env, token_index)
     }
 
+    /// Create a new stream
+    pub fn create_stream(
+        env: Env,
+        creator: Address,
+        recipient: Address,
+        amount: i128,
+        metadata: Option<String>,
+    ) -> Result<u32, Error> {
+        creator.require_auth();
+
+        if amount <= 0 {
+            return Err(Error::InvalidAmount);
+        }
+
+        stream_types::validate_metadata(&metadata)?;
+
+        let stream_id = storage::get_stream_count(&env);
+        let stream = stream_types::StreamInfo {
+            id: stream_id,
+            creator: creator.clone(),
+            recipient: recipient.clone(),
+            amount,
+            metadata: metadata.clone(),
+            created_at: env.ledger().timestamp(),
+            claimed: false,
+            paused: false,
+            cancelled: false,
+        };
+
+        storage::set_stream(&env, stream_id, &stream);
+        storage::increment_stream_count(&env);
+
+        events::emit_stream_created(&env, stream_id, &creator, &recipient, amount, &metadata);
+
+        Ok(stream_id)
+    }
+
+    /// Claim a stream (beneficiary only)
+    pub fn claim_stream(env: Env, stream_id: u32, beneficiary: Address) -> Result<(), Error> {
+        beneficiary.require_auth();
+
+        let mut stream = storage::get_stream(&env, stream_id).ok_or(Error::StreamNotFound)?;
+
+        if stream.recipient != beneficiary {
+            return Err(Error::Unauthorized);
+        }
+
+        if stream.claimed {
+            return Err(Error::StreamAlreadyClaimed);
+        }
+
+        if stream.paused {
+            return Err(Error::StreamPaused);
+        }
+
+        if stream.cancelled {
+            return Err(Error::StreamCancelled);
+        }
+
+        stream.claimed = true;
+        storage::set_stream(&env, stream_id, &stream);
+
+        Ok(())
+    }
+
+    /// Pause a stream (creator only)
+    pub fn pause_stream(env: Env, stream_id: u32, creator: Address) -> Result<(), Error> {
+        creator.require_auth();
+
+        let mut stream = storage::get_stream(&env, stream_id).ok_or(Error::StreamNotFound)?;
+
+        if stream.creator != creator {
+            return Err(Error::Unauthorized);
+        }
+
+        if stream.paused {
+            return Err(Error::StreamPaused);
+        }
+
+        stream.paused = true;
+        storage::set_stream(&env, stream_id, &stream);
+
+        Ok(())
+    }
+
+    /// Unpause a stream (creator only)
+    pub fn unpause_stream(env: Env, stream_id: u32, creator: Address) -> Result<(), Error> {
+        creator.require_auth();
+
+        let mut stream = storage::get_stream(&env, stream_id).ok_or(Error::StreamNotFound)?;
+
+        if stream.creator != creator {
+            return Err(Error::Unauthorized);
+        }
+
+        if !stream.paused {
+            return Err(Error::StreamNotPaused);
+        }
+
+        stream.paused = false;
+        storage::set_stream(&env, stream_id, &stream);
+
+        Ok(())
+    }
+
+    /// Cancel a stream (creator only)
+    pub fn cancel_stream(env: Env, stream_id: u32, creator: Address) -> Result<(), Error> {
+        creator.require_auth();
+
+        let mut stream = storage::get_stream(&env, stream_id).ok_or(Error::StreamNotFound)?;
+
+        if stream.creator != creator {
+            return Err(Error::Unauthorized);
+        }
+
+        if stream.cancelled {
+            return Err(Error::StreamCancelled);
+        }
+
+        stream.cancelled = true;
+        storage::set_stream(&env, stream_id, &stream);
+
+        Ok(())
+    }
+
+    /// Get stream info
+    pub fn get_stream(env: Env, stream_id: u32) -> Result<stream_types::StreamInfo, Error> {
+        storage::get_stream(&env, stream_id).ok_or(Error::StreamNotFound)
+    }
+
+    /// Get token balance for a holder
+    pub fn get_balance(env: Env, token_index: u32, holder: Address) -> i128 {
+        storage::get_balance(&env, token_index, &holder)
+    }
+
 }
 
 // Temporarily disabled - requires create_token implementation
@@ -893,3 +1031,6 @@ mod fuzz_create_token_simple;
 
 #[cfg(test)]
 mod stream_metadata_test;
+
+#[cfg(test)]
+mod stream_auth_test;

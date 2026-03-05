@@ -660,3 +660,21 @@ pub fn get_admin_state(env: &Env) -> (Address, bool) {
     let paused = is_paused(env);
     (admin, paused)
 }
+
+// Stream management
+pub fn get_stream_count(env: &Env) -> u32 {
+    env.storage().instance().get(&DataKey::StreamCount).unwrap_or(0)
+}
+
+pub fn increment_stream_count(env: &Env) {
+    let count = get_stream_count(env);
+    env.storage().instance().set(&DataKey::StreamCount, &(count + 1));
+}
+
+pub fn get_stream(env: &Env, stream_id: u32) -> Option<crate::stream_types::StreamInfo> {
+    env.storage().instance().get(&DataKey::Stream(stream_id))
+}
+
+pub fn set_stream(env: &Env, stream_id: u32, stream: &crate::stream_types::StreamInfo) {
+    env.storage().instance().set(&DataKey::Stream(stream_id), stream);
+}

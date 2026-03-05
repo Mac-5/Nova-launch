@@ -27,6 +27,12 @@ model Token {
 
   @@index([address])
   @@index([creator])
+  @@index([createdAt])
+  @@index([totalSupply])
+  @@index([totalBurned])
+  @@index([burnCount])
+  @@index([name])
+  @@index([symbol])
 }
 
 model BurnRecord {
@@ -71,4 +77,29 @@ model Analytics {
   @@unique([tokenId, date])
   @@index([tokenId])
   @@index([date])
+}
+
+model Stream {
+  id          String   @id @default(uuid())
+  streamId    Int      @unique
+  creator     String
+  recipient   String
+  amount      BigInt
+  metadata    String?
+  status      StreamStatus @default(CREATED)
+  txHash      String   @unique
+  createdAt   DateTime @default(now())
+  claimedAt   DateTime?
+  cancelledAt DateTime?
+
+  @@index([creator])
+  @@index([recipient])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum StreamStatus {
+  CREATED
+  CLAIMED
+  CANCELLED
 }

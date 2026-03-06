@@ -147,6 +147,12 @@ pub struct FeeUpdate {
 /// * `TreasuryPolicy` - Treasury withdrawal policy
 /// * `WithdrawalPeriod` - Current withdrawal period tracking
 /// * `AllowedRecipient(Address)` - Whether address is allowed recipient
+/// * `StreamCount` - Total number of streams created
+/// * `Stream(u64)` - Stream info by ID
+/// * `NextStreamId` - Next available stream ID
+/// * `VoteSnapshot(u64)` - Vote snapshot by ID
+/// * `VoterWeight(u64, Address)` - Voter weight in snapshot (snapshot_id, voter)
+/// * `NextSnapshotId` - Next available snapshot ID
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum DataKey {
@@ -174,6 +180,10 @@ pub enum DataKey {
     StreamCount,                    // Total number of streams created
     Stream(u64),                    // Stream info by ID (using u64 for consistency)
     NextStreamId,                   // Next available stream ID
+    // Governance snapshot keys
+    VoteSnapshot(u64),              // Vote snapshot by ID
+    VoterWeight(u64, Address),      // Voter weight (snapshot_id, voter)
+    NextSnapshotId,                 // Next available snapshot ID
 }
 
 /// Contract error codes
@@ -437,6 +447,7 @@ pub enum ProposalActionType {
 /// * `eta` - Estimated time of execution (after timelock)
 /// * `executed` - Whether the proposal has been executed
 /// * `cancelled` - Whether the proposal has been cancelled
+/// * `snapshot_id` - ID of the vote weight snapshot for this proposal
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct GovernanceProposal {
@@ -450,5 +461,55 @@ pub struct GovernanceProposal {
     pub eta: u64,
     pub executed: bool,
     pub cancelled: bool,
+    pub snapshot_id: u64,
+}
+
+/// Vote weight snapshot strategy
+///
+/// Defines how voting power is calculated at snapshot time.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum VoteWeightStrategy {
+    /// One address = one vote (simple democracy)
+    OneAddressOneVote,
+    /// Voting power based on token balance at snapshot
+    TokenBalance,
+}
+
+/// Vote weight snapshot
+///
+/// Records voting power for all participants at a specific point in time.
+/// Prevents manipulation of voting power during active voting period.
+///
+/// # Fields
+/// * `id` - Unique snapshot identifier
+/// * `proposal_id` - Associated proposal ID
+/// * `timestamp` - When snapshot was taken (typically proposal start_time)
+/// * `strategy` - Vote weight calculation strategy used
+/// * `total_weight` - Total voting power in this snapshot
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VoteSnapshot {
+    pub id: u64,
+    pub proposal_id: u64,
+    pub timestamp: u64,
+    pub strategy: VoteWeightStrategy,
+    pub total_weight: i128,
+}
+
+/// Individual voter's weight in a snapshot
+///
+/// Records a single voter's power at snapshot time.
+///
+/// # Fields
+/// * `snapshot_id` - Associated snapshot ID
+/// * `voter` - Address of the voter
+/// * `weight` - Voting power (1 for OneAddressOneVote, balance for TokenBalance)
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VoterWeight {
+    pub snapshot_id: u64,
+    pub voter: Address,
+    pub weight: i128,
 }
 

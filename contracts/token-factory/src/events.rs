@@ -420,38 +420,6 @@ pub fn emit_stream_metadata_updated(
     );
 }
 
-/// Emit stream created event (v1)
-/// 
-/// **Schema Version**: 1
-/// **Event Name**: strm_crt
-/// 
-/// **Topics** (indexed):
-/// - Event name: "strm_crt"
-/// - stream_id: u32 - The newly created stream ID
-/// 
-/// **Payload** (non-indexed):
-/// - creator: Address - The stream creator
-/// - recipient: Address - The stream recipient
-/// - amount: i128 - The stream amount
-/// - has_metadata: bool - Whether metadata is present
-/// 
-/// **Schema Stability**: This schema is immutable. Any changes require a new version.
-/// 
-/// Emitted when a new stream is created
-pub fn emit_stream_created(
-    env: &Env,
-    stream_id: u32,
-    creator: &Address,
-    recipient: &Address,
-    amount: i128,
-    has_metadata: bool,
-) {
-    env.events().publish(
-        (symbol_short!("strm_crt"), stream_id),
-        (creator, recipient, amount, has_metadata),
-    );
-}
-
 
 /// Emit metadata set event
 /// 
@@ -534,5 +502,71 @@ pub fn emit_stream_cancelled(
     env.events().publish(
         (symbol_short!("strm_cnl"),),
         (stream_id, creator),
+    );
+}
+
+
+// ── Governance events ─────────────────────────────────────────
+
+/// Emit proposal created event (v1)
+/// 
+/// **Schema Version**: 1
+/// **Event Name**: prop_crt
+/// 
+/// **Topics** (indexed):
+/// - Event name: "prop_crt"
+/// - proposal_id: u64 - The newly created proposal ID
+/// 
+/// **Payload** (non-indexed):
+/// - proposer: Address - The address that created the proposal
+/// - action_type: ActionType - The type of action being proposed
+/// - start_time: u64 - Voting start timestamp
+/// - end_time: u64 - Voting end timestamp
+/// - eta: u64 - Estimated execution time
+/// 
+/// **Schema Stability**: This schema is immutable. Any changes require a new version.
+/// 
+/// Emitted when a new governance proposal is created
+pub fn emit_proposal_created(
+    env: &Env,
+    proposal_id: u64,
+    proposer: &Address,
+    action_type: crate::types::ActionType,
+    start_time: u64,
+    end_time: u64,
+    eta: u64,
+) {
+    env.events().publish(
+        (symbol_short!("prop_crt"), proposal_id),
+        (proposer, action_type, start_time, end_time, eta),
+    );
+}
+
+
+/// Emit proposal voted event (v1)
+/// 
+/// **Schema Version**: 1
+/// **Event Name**: prop_vot
+/// 
+/// **Topics** (indexed):
+/// - Event name: "prop_vot"
+/// - proposal_id: u64 - The proposal being voted on
+/// 
+/// **Payload** (non-indexed):
+/// - voter: Address - The address that cast the vote
+/// - vote_choice: VoteChoice - The vote choice (For, Against, Abstain)
+/// 
+/// **Schema Stability**: This schema is immutable. Any changes require a new version.
+/// 
+/// Emitted when a vote is cast on a governance proposal
+pub fn emit_proposal_voted(
+    env: &Env,
+    proposal_id: u64,
+    voter: &Address,
+    vote_choice: crate::types::VoteChoice,
+) {
+    env.events().publish(
+        (symbol_short!("prop_vot"), proposal_id),
+        (voter, vote_choice),
     );
 }

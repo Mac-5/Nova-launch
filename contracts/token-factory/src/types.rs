@@ -249,37 +249,9 @@ pub enum DataKey {
 
 /// Contract error codes
 ///
-/// Defines all possible error conditions that can occur during
-/// contract execution. Each error has a unique numeric code.
-///
-/// # Variants
-/// * `InsufficientFee` - Provided fee is less than required
-/// * `Unauthorized` - Caller lacks required permissions
-/// * `InvalidParameters` - Function arguments are invalid
-/// * `TokenNotFound` - Requested token does not exist
-/// * `MetadataAlreadySet` - Token metadata cannot be changed
-/// * `AlreadyInitialized` - Contract has already been initialized
-/// * `InsufficientBalance` - Account balance too low for operation
-/// * `ArithmeticError` - Numeric overflow or underflow occurred
-/// * `BatchTooLarge` - Batch operation exceeds maximum size
-/// * `InvalidAmount` - Amount is zero or negative
-/// * `ClawbackDisabled` - Clawback not enabled for this token
-/// * `InvalidBurnAmount` - Burn amount is invalid
-/// * `BurnAmountExceedsBalance` - Burn amount exceeds available balance
-/// * `ContractPaused` - Operation not allowed while paused
-/// * `TimelockNotExpired` - Timelock period has not elapsed
-/// * `ChangeAlreadyExecuted` - Change has already been executed
-/// * `MaxSupplyExceeded` - Minting would exceed max supply cap
-/// * `InvalidMaxSupply` - Max supply is less than initial supply
-/// * `WithdrawalCapExceeded` - Withdrawal would exceed daily cap
-/// * `RecipientNotAllowed` - Recipient not in allowlist
-///
-/// # Examples
-/// ```
-/// if amount <= 0 {
-///     return Err(Error::InvalidAmount);
-/// }
-/// ```
+/// Every variant maps to a stable numeric code consumed by downstream clients.
+/// Vault lifecycle failures use codes 60-65 (`VaultNotFound`, `VaultLocked`,
+/// `VaultAlreadyClaimed`, `VaultCancelled`, `InvalidVaultConfig`, `NothingToClaim`).
 #[contracterror]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Error {
@@ -331,6 +303,12 @@ pub enum Error {
     AddressFrozen = 48,
     FreezeNotEnabled = 49,
     AddressNotFrozen = 50,
+    VaultNotFound = 60,
+    VaultLocked = 61,
+    VaultAlreadyClaimed = 62,
+    VaultCancelled = 63,
+    InvalidVaultConfig = 64,
+    NothingToClaim = 65,
 }
 
 /// Governance configuration

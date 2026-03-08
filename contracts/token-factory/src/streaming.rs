@@ -340,7 +340,7 @@ fn validate_stream_params(env: &Env, params: &StreamParams) -> Result<(), Error>
 /// * `Error::Unauthorized` - Caller is not the recipient
 /// * `Error::CliffNotReached` - Current time before cliff_time
 /// * `Error::StreamCancelled` - Stream cancelled
-/// * `Error::InvalidAmount` - No claimable amount
+/// * `Error::NothingToClaim` - No claimable amount
 pub fn claim_stream(env: &Env, recipient: &Address, stream_id: u64) -> Result<i128, Error> {
     recipient.require_auth();
 
@@ -373,7 +373,7 @@ pub fn claim_stream(env: &Env, recipient: &Address, stream_id: u64) -> Result<i1
     let claimable = calculate_claimable(env, &stream)?;
 
     if claimable == 0 {
-        return Err(Error::InvalidAmount);
+        return Err(Error::NothingToClaim);
     }
 
     // Update claimed amount

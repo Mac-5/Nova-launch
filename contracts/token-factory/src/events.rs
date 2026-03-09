@@ -180,7 +180,7 @@ pub fn emit_admin_transfer(env: &Env, old_admin: &Address, new_admin: &Address) 
 /// **Schema Stability**: This schema is immutable. Any changes require a new version.
 pub fn emit_admin_proposed(env: &Env, current_admin: &Address, proposed_admin: &Address) {
     env.events()
-        .publish((symbol_short!("adm_prop_v1"),), (current_admin, proposed_admin));
+        .publish((symbol_short!("adprp_v1"),), (current_admin, proposed_admin));
 }
 
 /// Emit pause event (v1)
@@ -692,5 +692,25 @@ pub fn emit_vault_created(
             unlock_time,
             milestone_hash.clone(),
         ),
+    );
+}
+
+/// Emit vault claimed event
+///
+/// Published when a vault is successfully claimed.
+pub fn emit_vault_claimed(env: &Env, vault_id: u64, owner: &Address, amount: i128) {
+    env.events().publish(
+        (symbol_short!("vlt_clm"), vault_id),
+        (owner.clone(), amount),
+    );
+}
+
+/// Emit vault cancelled event
+///
+/// Published when a vault is cancelled.
+pub fn emit_vault_cancelled(env: &Env, vault_id: u64, actor: &Address, remaining_amount: i128) {
+    env.events().publish(
+        (symbol_short!("vlt_cnl"), vault_id),
+        (actor.clone(), remaining_amount),
     );
 }

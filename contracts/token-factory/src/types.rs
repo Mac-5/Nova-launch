@@ -125,6 +125,7 @@ pub struct TokenCreationParams {
     pub symbol: String,
     pub decimals: u32,
     pub initial_supply: i128,
+    pub max_supply: Option<i128>,
     pub metadata_uri: Option<String>,
 }
 
@@ -205,56 +206,6 @@ pub struct TokenStats {
 pub struct FeeUpdate {
     pub base_fee: Option<i128>,
     pub metadata_fee: Option<i128>,
-}
-
-/// Governance configuration
-///
-/// Contains governance parameters for proposal voting and execution.
-///
-/// # Fields
-/// * `quorum_percent` - Minimum participation percentage (0-100)
-/// * `approval_percent` - Minimum approval percentage (0-100)
-#[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct GovernanceConfig {
-    pub quorum_percent: u32,
-    pub approval_percent: u32,
-}
-
-/// Timelock configuration
-///
-/// Contains timelock parameters for delayed execution of sensitive operations.
-///
-/// # Fields
-/// * `delay_seconds` - Minimum delay before execution (in seconds)
-/// * `enabled` - Whether timelock is enabled
-#[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct TimelockConfig {
-    pub delay_seconds: u64,
-    pub enabled: bool,
-}
-
-/// Token creation parameters
-///
-/// Contains all parameters needed to create a new token.
-///
-/// # Fields
-/// * `name` - Token name
-/// * `symbol` - Token symbol
-/// * `decimals` - Number of decimal places
-/// * `initial_supply` - Initial token supply
-/// * `max_supply` - Optional maximum supply cap
-/// * `metadata_uri` - Optional IPFS URI for metadata
-#[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct TokenCreationParams {
-    pub name: String,
-    pub symbol: String,
-    pub decimals: u32,
-    pub initial_supply: i128,
-    pub max_supply: Option<i128>,
-    pub metadata_uri: Option<String>,
 }
 
 /// Storage keys for contract data

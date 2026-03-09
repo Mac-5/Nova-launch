@@ -1248,7 +1248,7 @@ pub fn execute_proposal(env: &Env, proposal_id: u64) -> Result<(), Error> {
     proposal.executed_at = Some(current_time);
     storage::set_proposal(env, proposal_id, &proposal);
 
-    events::emit_proposal_executed(env, proposal_id);
+    events::emit_proposal_executed(env, proposal_id, &proposal.proposer, true);
 
     Ok(())
 }

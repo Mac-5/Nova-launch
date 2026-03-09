@@ -37,7 +37,7 @@ mod governance_property_test;
 use soroban_sdk::{contract, contractimpl, symbol_short, Address, Bytes, BytesN, Env, String, Vec};
 use types::{
     ContractMetadata, Error, FactoryState, PaginationCursor, StreamInfo, StreamPage, StreamParams,
-    TokenInfo, TokenStats, Vault, VaultStatus,
+    TokenInfo, TokenStats, Vault, VaultStatus, TokenCreationParams,
 };
 use crate::milestone_verification::MilestoneVerifier;
 

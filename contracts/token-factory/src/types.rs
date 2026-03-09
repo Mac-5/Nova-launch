@@ -314,34 +314,6 @@ pub enum Error {
     NothingToClaim = 65,
 }
 
-/// Governance configuration
-///
-/// Defines quorum and approval thresholds for governance operations.
-///
-/// # Fields
-/// * `quorum_percent` - Minimum participation percentage (0-100)
-/// * `approval_percent` - Minimum approval percentage (0-100)
-#[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct GovernanceConfig {
-    pub quorum_percent: u32,
-    pub approval_percent: u32,
-}
-
-/// Timelock configuration
-///
-/// Defines the delay period for sensitive operations.
-///
-/// # Fields
-/// * `delay_seconds` - Time delay in seconds before changes can be executed
-/// * `enabled` - Whether timelock is currently active
-#[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct TimelockConfig {
-    pub delay_seconds: u64,
-    pub enabled: bool,
-}
-
 /// Type of pending change
 ///
 /// Identifies which operation is being timelocked.

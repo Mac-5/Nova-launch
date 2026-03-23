@@ -4,6 +4,7 @@ import webhookDeliveryService from "./webhookDeliveryService";
 import { PrismaClient } from "@prisma/client";
 import { GovernanceEventParser } from "./governanceEventParser";
 import governanceEventMapper from "./governanceEventMapper";
+import { TokenEventParser, RawTokenEvent } from "./tokenEventParser";
 
 const HORIZON_URL =
   process.env.STELLAR_HORIZON_URL || "https://horizon-testnet.stellar.org";
@@ -28,10 +29,12 @@ export class StellarEventListener {
   private lastCursor: string | null = null;
   private prisma: PrismaClient;
   private governanceParser: GovernanceEventParser;
+  private tokenEventParser: TokenEventParser;
 
   constructor() {
     this.prisma = new PrismaClient();
     this.governanceParser = new GovernanceEventParser(this.prisma);
+    this.tokenEventParser = new TokenEventParser(this.prisma);
   }
 
   /**
@@ -130,6 +133,12 @@ export class StellarEventListener {
 
       if (!eventData) {
         return;
+      }
+
+      // Persist token projection (idempotent)
+      const rawTokenEvent = this.toRawTokenEvent(event);
+      if (rawTokenEvent) {
+        await this.tokenEventParser.parseEvent(rawTokenEvent);
       }
 
       // Trigger webhooks only if we have a webhook event type
@@ -233,6 +242,60 @@ export class StellarEventListener {
 
       default:
         return baseData;
+    }
+  }
+
+  /**
+   * Map a StellarEvent to a RawTokenEvent for projection, or null if not a token event.
+   */
+  private toRawTokenEvent(event: StellarEvent): RawTokenEvent | null {
+    const topic0 = event.topic[0];
+    const tokenAddress = event.topic[1] || "";
+
+    switch (topic0) {
+      case "tok_reg":
+        return {
+          type: "tok_reg",
+          tokenAddress,
+          transactionHash: event.transaction_hash,
+          ledger: event.ledger,
+          creator: event.value?.creator || "",
+          name: event.value?.name || "",
+          symbol: event.value?.symbol || "",
+          decimals: event.value?.decimals ?? 7,
+          initialSupply: event.value?.initial_supply?.toString() || "0",
+        };
+      case "tok_burn":
+        return {
+          type: "tok_burn",
+          tokenAddress,
+          transactionHash: event.transaction_hash,
+          ledger: event.ledger,
+          from: event.value?.from || "",
+          amount: event.value?.amount?.toString() || "0",
+          burner: event.value?.burner || event.value?.from || "",
+        };
+      case "adm_burn":
+        return {
+          type: "adm_burn",
+          tokenAddress,
+          transactionHash: event.transaction_hash,
+          ledger: event.ledger,
+          from: event.value?.from || "",
+          amount: event.value?.amount?.toString() || "0",
+          admin: event.value?.admin || "",
+        };
+      case "tok_meta":
+        return {
+          type: "tok_meta",
+          tokenAddress,
+          transactionHash: event.transaction_hash,
+          ledger: event.ledger,
+          metadataUri: event.value?.metadata_uri || "",
+          updatedBy: event.value?.updated_by || "",
+        };
+      default:
+        return null;
     }
   }
 

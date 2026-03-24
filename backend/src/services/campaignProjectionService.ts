@@ -1,4 +1,6 @@
 import { PrismaClient } from "@prisma/client";
+import { performance } from "perf_hooks";
+
 
 const prisma = new PrismaClient();
 
@@ -44,6 +46,7 @@ export class CampaignProjectionService {
   async getCampaignById(
     campaignId: number
   ): Promise<CampaignProjection | null> {
+    const start = performance.now();
     const campaign = await prisma.campaign.findUnique({
       where: { campaignId },
       include: {
@@ -53,6 +56,11 @@ export class CampaignProjectionService {
         },
       },
     });
+    const duration = performance.now() - start;
+    if (duration > 100) {
+      console.warn(`[PERF] getCampaignById took ${duration.toFixed(2)}ms`);
+    }
+
 
     if (!campaign) return null;
 
@@ -122,6 +130,7 @@ export class CampaignProjectionService {
   async getCampaignStats(tokenId?: string): Promise<CampaignStats> {
     const where = tokenId ? { tokenId } : {};
 
+    const start = performance.now();
     const [totalCampaigns, activeCampaigns, completedCampaigns, aggregates] =
       await Promise.all([
         prisma.campaign.count({ where }),
@@ -135,6 +144,11 @@ export class CampaignProjectionService {
           },
         }),
       ]);
+    const duration = performance.now() - start;
+    if (duration > 200) {
+      console.warn(`[PERF] getCampaignStats took ${duration.toFixed(2)}ms`);
+    }
+
 
     return {
       totalCampaigns,
